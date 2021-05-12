@@ -50,30 +50,6 @@ public class MainUI : MonoBehaviour
         }
     }
 
-    void SetFollowerDistanceStatus()
-    {
-        if (characterManager.red.isActive)
-        {
-            followerRangeStatus.text = (characterManager.red.WithinRange().ToString());
-            if (characterManager.red.WithinRange())
-            {
-                followerRangeStatus.color = Color.green;
-            }
-            else
-                followerRangeStatus.color = Color.red;
-        }
-        else if (characterManager.blue.isActive)
-        {
-            followerRangeStatus.text = (characterManager.blue.WithinRange().ToString());
-            if (characterManager.blue.WithinRange())
-            {
-                followerRangeStatus.color = Color.green;
-            }
-            else
-                followerRangeStatus.color = Color.red;
-        }
-    }
-
     void SetActiveCharacterIcon()
     {
         if (characterManager.red.isActive)

@@ -7,9 +7,14 @@ public class Fireball : MonoBehaviour
     Rigidbody2D rb;
     BoxCollider2D col;
     SpriteRenderer sprite;
+    AudioSource audioSource;
+
+    public AudioClip[] impactSounds;
 
     public Vector2 velocity;
     public float speed, lifetime, lifespan;
+
+    public int damage;
 
     public LayerMask collidable;
 
@@ -18,6 +23,7 @@ public class Fireball : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<BoxCollider2D>();
         sprite = GetComponent<SpriteRenderer>();
+        audioSource = GetComponent<AudioSource>();
 
         lifetime = lifespan;
 
@@ -52,11 +58,22 @@ public class Fireball : MonoBehaviour
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.layer == collidable)
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Attackable"))
         {
-            print("yeet"); 
+            if (collision.GetComponent<BigGhostThing>())
+            {
+                BigGhostThing enemy = collision.gameObject.GetComponent<BigGhostThing>();
+                enemy.TakeDamage(damage);  
+            }
+            Destroy(gameObject);
         }
+    }
+
+    void PlayImpactSound()
+    {
+        audioSource.clip = impactSounds[Random.Range(0, impactSounds.Length)];
+        audioSource.Play();
     }
 }

@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Blue
   - Red
+  - SpawnPoint
+  - Sword
   layers:
   - Default
   - TransparentFX
@@ -16,7 +18,7 @@ TagManager:
   - Red
   - Blue
   - Projectile
-  - 
+  - Harmful
   - 
   - 
   - 

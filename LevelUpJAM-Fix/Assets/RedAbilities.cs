@@ -6,6 +6,7 @@ public class RedAbilities : MonoBehaviour
 {
     public GameObject fireballPrefab;
     public Transform fireballSpawnPointL, fireballSpawnPointR;
+    PlayerController player;
 
     public float speed, lifespan;
 
@@ -14,6 +15,7 @@ public class RedAbilities : MonoBehaviour
     void Start()
     {
         startFireRate = fireRate;
+        player = GetComponent<PlayerController>();
     }
 
     // Update is called once per frame
@@ -26,12 +28,14 @@ public class RedAbilities : MonoBehaviour
 
         fireRate -= Time.deltaTime;
 
-        if (fireRate <= 0)
+        if (fireRate <= 0 && player.mana >= player.manaBar.maximum * .25f) 
         {
             canFire = true;
         }
-        if (Input.GetKeyDown(KeyCode.F) && canFire)
+        if (Input.GetKeyDown(KeyCode.X) && canFire)
         {
+            player.mana -= Mathf.FloorToInt(player.manaBar.maximum * .25f);
+            GetComponent<RedAudio>().PlayShootSound();
             fireRate = startFireRate;
             canFire = false;
             SpriteRenderer sprite = GetComponent<SpriteRenderer>();

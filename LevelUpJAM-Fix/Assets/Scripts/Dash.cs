@@ -6,7 +6,7 @@ public class Dash : MonoBehaviour
 {
     PlayerController character;
 
-    [SerializeField] float dashForce;
+    [SerializeField] float dashForce, dashTime, startDashTime;
     void Start()
     {
         character = GetComponent<PlayerController>();
@@ -17,11 +17,11 @@ public class Dash : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            character.Dash(0);
+            character.StartDash(true, dashForce);
         }
         else if (Input.GetKeyDown(KeyCode.Q))
         {
-            character.Dash(1);
+            character.StartDash(false, dashForce);
         }
     }
 }
