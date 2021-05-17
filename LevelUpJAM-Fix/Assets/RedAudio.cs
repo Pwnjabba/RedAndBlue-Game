@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class RedAudio : MonoBehaviour
 {
-    public AudioSource audioSource;
+    public AudioSource projectileAudioSource, dashAudioSource;
 
-    public AudioClip shootSound;
+    public AudioClip shootSound, dashSound;
 
     void Start()
     {
-        audioSource = GetComponent<AudioSource>();
+        projectileAudioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -21,8 +21,14 @@ public class RedAudio : MonoBehaviour
 
     public void PlayShootSound()
     {
-        audioSource.clip = shootSound;
-        audioSource.Play();
+        projectileAudioSource.clip = shootSound;
+        projectileAudioSource.Play();
+    }
+
+    public void PlayDashSound()
+    {
+        dashAudioSource.clip = dashSound;
+        dashAudioSource.Play();
     }
 
 }

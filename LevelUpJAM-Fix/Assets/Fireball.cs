@@ -9,6 +9,11 @@ public class Fireball : MonoBehaviour
     SpriteRenderer sprite;
     AudioSource audioSource;
 
+    float distanceFromSpawn;
+    public float maxDistanceFromSpawn;
+
+    Vector2 spawnPos;
+
     public AudioClip[] impactSounds;
 
     public Vector2 velocity;
@@ -18,12 +23,15 @@ public class Fireball : MonoBehaviour
 
     public LayerMask collidable;
 
+    public GameObject explosionEffect;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<BoxCollider2D>();
         sprite = GetComponent<SpriteRenderer>();
         audioSource = GetComponent<AudioSource>();
+        spawnPos = transform.position;
 
         lifetime = lifespan;
 
@@ -32,9 +40,10 @@ public class Fireball : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        distanceFromSpawn = Vector2.Distance(spawnPos, transform.position);
         lifetime -= Time.deltaTime;
 
-        if (lifetime <= 0)
+        if (lifetime <= 0 || distanceFromSpawn >= maxDistanceFromSpawn)
         {
             Destroy(gameObject);
         }
@@ -49,24 +58,23 @@ public class Fireball : MonoBehaviour
     public void InitializeProjectile(bool right)
     {
         if (right)
-        {
             velocity = Vector2.right * speed;
-        }
         else
-        {
             velocity = Vector2.left * speed;
-        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Attackable"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Attackable") || collision.gameObject.layer == LayerMask.NameToLayer("World"))
         {
-            if (collision.GetComponent<BigGhostThing>())
+            if (collision.GetComponent<BaseEnemy>())
             {
-                BigGhostThing enemy = collision.gameObject.GetComponent<BigGhostThing>();
-                enemy.TakeDamage(damage);  
+                BaseEnemy enemy = collision.gameObject.GetComponent<BaseEnemy>();
+                enemy.TakeDamage(damage);
+                enemy.transform.GetComponent<EnemyAudio>().PlayDamageSound(true);
             }
+            GameObject explosion = Instantiate(explosionEffect);
+            explosion.transform.position = transform.position;
             Destroy(gameObject);
         }
     }

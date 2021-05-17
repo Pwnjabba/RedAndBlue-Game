@@ -6,8 +6,13 @@ using UnityEngine;
 public class BlueAudio : MonoBehaviour
 {
     public AudioSource blueAudio;
-    public AudioClip[] swordSounds;
+    public GameObject iceTrail;
     public PlayerController blue;
+
+    float trailTimer;
+    public float trailLifetime;
+
+    public AudioClip attack1, attack2;
     void Start()
     {
         blue = GetComponent<PlayerController>();
@@ -17,13 +22,28 @@ public class BlueAudio : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (blue.sliding)
+        {
+            trailTimer = trailLifetime;
+            iceTrail.SetActive(true);
+        }
+        else
+        {
+            trailTimer -= Time.deltaTime;
+            if (trailTimer <= 0)
+            {
+                iceTrail.SetActive(false);
+            }
+        }
     }
 
-    public void PlaySwordSound()
+    public void PlayAttackSound()
     {
-        blueAudio.pitch = Random.Range(.75f, 1.25f);
-        blueAudio.clip = swordSounds[Random.Range(0, swordSounds.Length)];
+        int rand = Random.Range(0, 1);
+
+        blueAudio.clip = rand == 1 ? attack2 : attack1;
         blueAudio.Play();
     }
+
+
 }

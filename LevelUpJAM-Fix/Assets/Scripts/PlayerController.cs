@@ -4,14 +4,21 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] float speed, gravity;
+    [SerializeField] float speed, speedCache, gravity;
 
     float sortingOrderCache;
 
     public float lastKeyPressTime = 1f;
-    
+
+    public Transform lookUp, lookDown;
+
+    public float maxSpeed;
     float horizontalMove, verticalMove;
-    bool jumping, dashing, canDash;
+    public bool sliding, canSlide;
+    float slideTime;
+    public float startSlideTime, slideSpeed;
+
+    public bool jumping, dashing, canDash;
     public float dashTime, startDashTime, dashForce, dashCooldown, startDashCooldown;
     public bool isGrounded, nonPlayerGrounded;
     public float checkRadius, jumpForce;
@@ -28,8 +35,8 @@ public class PlayerController : MonoBehaviour
 
     public PlayerController otherCharacter;
 
-    public float mana, manaRegenSpeed;
-    public ProgressBar manaBar;
+    //public float mana, manaRegenSpeed;
+    //public ProgressBar manaBar;
 
     public GameObject spawnPoint;
 
@@ -41,12 +48,12 @@ public class PlayerController : MonoBehaviour
         col = GetComponent<BoxCollider2D>();
         sprite = GetComponent<SpriteRenderer>();
         gravity = rb.gravityScale;
-
-        if (manaBar != null)
-        {
-            mana = manaBar.maximum;
-            manaBar.current = (int)mana;
-        }
+        speedCache = speed;
+        //if (manaBar != null)
+        //{
+        //    mana = manaBar.maximum;
+        //    manaBar.current = (int)mana;
+        //}
 
 
         sortingOrderCache = sprite.sortingOrder;
@@ -68,41 +75,34 @@ public class PlayerController : MonoBehaviour
     {
         PlayerInput();
         HandleSprite();
-        if (manaBar != null)
-        RegenerateMana();
 
+        //if (manaBar != null)
+        //RegenerateMana();
 
         if (isActive)
         {
             Jump();
         }
 
-
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            float timeSinceLastClick = 1;
-            timeSinceLastClick = Time.time - lastKeyPressTime;
-            lastKeyPressTime = Time.time;
-
-            if (timeSinceLastClick <= .25f && CharacterManager.instance.noCollide && CharacterManager.instance.activeCharacter.isGrounded)
-            {              
-                    canTeleportOtherCharacter = true;
-            }
-
-        }
-        if (canTeleportOtherCharacter)
-        {
-            lastKeyPressTime = 1f;
-            canTeleportOtherCharacter = false;
-
-            if (isActive)
-                TeleportOtherCharacterToThis();
-        }
-
         if (transform.position.y <= -100)
         {
-            transform.position = spawnPoint.transform.position;
+            transform.position = CheckpointManager.instance.currentCheckPoint.transform.position;
         }
+
+        if (isGrounded && dashCooldown <= 0)
+        {
+            canDash = true;
+        }
+
+        if (rb.velocity.magnitude >= maxSpeed)
+        {
+            rb.velocity = Vector2.ClampMagnitude(rb.velocity, maxSpeed);
+        }
+
+
+
+
+
 
     }
 
@@ -121,11 +121,11 @@ public class PlayerController : MonoBehaviour
 
         if (isActive)
         {
+            rb.sharedMaterial = defaultMat;
             rb.bodyType = RigidbodyType2D.Dynamic;
             PlayerMove();
         }
-
-        else
+        else 
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
 
@@ -134,6 +134,7 @@ public class PlayerController : MonoBehaviour
             else
                 rb.velocity = Vector2.zero;
         }
+
 
     }
 
@@ -145,10 +146,24 @@ public class PlayerController : MonoBehaviour
         jumping = Input.GetKey(KeyCode.Space);
         if (Input.GetKeyDown(KeyCode.C) && canDash && gameObject.tag == "Red" && isActive)
         {
+            GetComponent<RedAudio>().PlayDashSound();
             dashTime = startDashTime;
             dashCooldown = startDashCooldown;
             canDash = false;
             dashing = true;
+        }
+        else if (Input.GetKeyDown(KeyCode.C) && gameObject.tag == "Blue" && isActive && canDash)
+        {
+            if (isGrounded)
+            {
+                canDash = false;
+                if (transform.localScale.y == 1)
+                transform.position = new Vector2(transform.position.x, transform.position.y -.4f);
+                dashCooldown = startDashCooldown;
+                slideTime = startSlideTime;
+                sliding = true;
+            }
+            //ice slide
         }
     }
 
@@ -157,18 +172,26 @@ public class PlayerController : MonoBehaviour
         dashCooldown -= Time.deltaTime;
         if (!dashing)
         {
+            if (sliding)
+            {
+                speed = slideSpeed;
+                slideTime -= Time.deltaTime;
+
+                if (slideTime <= 0)
+                {
+                    speed = speedCache;
+                    sliding = false;
+                    if (!GetComponent<HeadCheck>().noHeadRoom)
+                    transform.position = new Vector2(transform.position.x, transform.position.y + .5f);
+                }
+            }
+
             velocity = new Vector2(horizontalMove * speed, rb.velocity.y);
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-
-            if (isGrounded && dashCooldown <= 0)
-            {
-                canDash = true;
-            }
         }
-
         else
         {
-            if (sprite.flipX)
+            if (transform.localScale.x < 0)
             {
                 velocity = Vector2.left * dashForce;
             }
@@ -188,12 +211,15 @@ public class PlayerController : MonoBehaviour
                 dashing = false;
             }
         }
-            
-        rb.velocity = velocity;
+            rb.velocity = velocity;
     }
 
     void Jump()
     {
+        if (sliding)
+        {
+            return;
+        }
         if (isGrounded == true && Input.GetKeyDown(KeyCode.Z))
         {
             rb.velocity = Vector2.up * jumpForce;
@@ -217,28 +243,72 @@ public class PlayerController : MonoBehaviour
         }
 
         //flip sprite
+        Vector3 characterScale = transform.localScale;
         if (isActive)
         {
-            if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow) || rb.velocity.x < -.1f)
+            if (Input.GetAxis("Horizontal") > 0)
             {
-                sprite.flipX = true;
+                characterScale.x = 1;
             }
-            else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow) || rb.velocity.x > 0.1f)
+            if (Input.GetAxis("Horizontal") < 0)
             {
-                sprite.flipX = false;
+                characterScale.x = -1;
             }
+            if (sliding)
+            {
+                characterScale.y = .5f;
+            }
+            else if (gameObject.tag == "Blue")
+            {
+                if (!GetComponent<HeadCheck>().noHeadRoom)
+                characterScale.y = 1f;
+            }
+
+            //crouch and stretch
+            //if (gameObject.tag == "Blue")
+            //{
+            //    if (Input.GetKeyDown(KeyCode.DownArrow) && isGrounded && !sliding)
+            //    {
+            //        transform.position = new Vector2(transform.position.x, transform.position.y - .5f);
+            //    }
+            //    if (Input.GetKeyUp(KeyCode.DownArrow) && isGrounded && !sliding)
+            //    {
+            //        transform.position = new Vector2(transform.position.x, transform.position.y + .5f);
+            //    }
+            //    if (Input.GetKey(KeyCode.DownArrow))
+            //    {
+            //        characterScale.y = .5f;
+
+            //    }
+                //else if (Input.GetKey(KeyCode.UpArrow) && !GetComponent<HeadCheck>().noHeadRoom)
+                //{
+                //    characterScale.y = 2f;
+                //}
+                //if (Input.GetKeyDown(KeyCode.UpArrow) && isGrounded)
+                //{
+                //    transform.position = new Vector2(transform.position.x, transform.position.y + 1f);
+                //}
+
+                //if (Input.GetKeyUp(KeyCode.UpArrow) && isGrounded)
+                //{
+                //    transform.position = new Vector2(transform.position.x, transform.position.y - 1f);
+            //    //}
+            //}
+
+
+            transform.localScale = characterScale;
         }
-        else
-        {
-            if (otherCharacter.transform.position.x >= transform.position.x)
-            {
-                sprite.flipX = false;
-            }
-            else
-            {
-                sprite.flipX = true;
-            }
-        }
+        //if (isActive)
+        //{
+        //    if (Input.GetKeyDown(KeyCode.LeftArrow))
+        //    {
+        //        sprite.flipX = true;
+        //    }
+        //    else if (Input.GetKeyDown(KeyCode.RightArrow))
+        //    {
+        //        sprite.flipX = false;
+        //    }
+        //}
 
         //sprite color
         if (CharacterManager.instance.noCollide && !isActive)
@@ -264,80 +334,61 @@ public class PlayerController : MonoBehaviour
         if (canTeleportOtherCharacter)
         {
             canTeleportOtherCharacter = false;
-            otherCharacter.transform.position = new Vector2(transform.position.x, transform.position.y + 1.5f);
+            otherCharacter.transform.position = new Vector2(transform.position.x + 3.5f, transform.position.y + 1f);
         }
 
     }
 
-    public void StartDash(bool right, float dashForce)
-    {
-        if (!dashing)
-        StartCoroutine(Dash(right, dashForce));
-    }
+    //void RegenerateMana()
+    //{
+    //    manaBar.current = Mathf.Clamp(manaBar.current, 0, manaBar.maximum);
+    //    if (manaBar.current < manaBar.maximum)
+    //        mana += manaRegenSpeed * Time.deltaTime;
 
-    public IEnumerator Dash(bool right, float dashForce)
-    {
-        dashing = true;
-        dashTime = startDashTime;
-        Debug.Log("dashing");
-        do
-        {
-            dashTime -= Time.deltaTime;
-            if (right)
-            {
-                rb.AddForce(Vector2.right * dashForce, ForceMode2D.Impulse);
-            }
-            else
-            {
-                rb.AddForce(Vector2.left * dashForce, ForceMode2D.Impulse);
-            }
-        } while (dashing);
-        dashTime = startDashTime;
-        dashing = false;
-        yield return new WaitForEndOfFrame();
-    }
-
-    void RegenerateMana()
-    {
-        manaBar.current = Mathf.Clamp(manaBar.current, 0, manaBar.maximum);
-        if (manaBar.current < manaBar.maximum)
-            mana += manaRegenSpeed * Time.deltaTime;
-
-        manaBar.current = (int)mana;
-    }
+    //    manaBar.current = (int)mana;
+    //}
 
     public void Die()
     {
         if (isActive)
         {
+            ImmortalAudio.instance.PlayDeathSound();
             GameManager.instance.ReloadGame();
         }
     }
 
     public void Launch(float force)
     {
+        if (gameObject.tag == "Red")
+        {
+            canDash = true;
+        }
         rb.velocity = Vector2.up * force;
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.layer == nonPlayerGroundLayer)
-            nonPlayerGrounded = true;
-    }
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        if (collision.gameObject.layer == nonPlayerGroundLayer)
-            nonPlayerGrounded = true;
+        //if (collision.gameObject.layer == nonPlayerGroundLayer)
+        //    nonPlayerGrounded = true;
 
+        if (collision.transform.GetComponent<BaseEnemy>())
+        {
+            if (sliding)
+            {
+                collision.transform.GetComponent<BaseEnemy>().TakeDamage(10);
+            }
+        }
     }
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.layer == nonPlayerGroundLayer)
-            nonPlayerGrounded = false;
-    }
+    //private void OnCollisionStay2D(Collision2D collision)
+    //{
+    //    if (collision.gameObject.layer == nonPlayerGroundLayer)
+    //        nonPlayerGrounded = true;
 
-    private void OnDrawGizmos()
-    {
-        
-    }
+    //}
+    //private void OnCollisionExit2D(Collision2D collision)
+    //{
+    //    if (collision.gameObject.layer == nonPlayerGroundLayer)
+    //        nonPlayerGrounded = false;
+    //}
+
 
 }

@@ -27,6 +27,8 @@ public class CharacterManager : MonoBehaviour
 
     public bool characterReactivated;
 
+
+
     private void Start()
     {
         blue = GameObject.FindGameObjectWithTag("Blue").GetComponent<PlayerController>();
@@ -34,6 +36,8 @@ public class CharacterManager : MonoBehaviour
 
         //Physics2D.IgnoreCollision(red.col, blue.col, true);
         defaultColor = Color.white;
+        SetActiveCharacter();
+        SpawnCharacters();
     }
 
     // Update is called once per frame
@@ -42,7 +46,7 @@ public class CharacterManager : MonoBehaviour
         SetActiveCharacter();
         CheckForCharacterOverlap();
 
-        if (Input.GetKeyDown(KeyCode.Tab) && activeCharacter.nonPlayerGrounded)
+        if (Input.GetKeyDown(KeyCode.F) && activeCharacter.nonPlayerGrounded)
         {
             SwitchCharacters();
         }
@@ -60,6 +64,12 @@ public class CharacterManager : MonoBehaviour
        
 
 
+    }
+
+    public void SpawnCharacters()
+    {
+        activeCharacter.transform.position = CheckpointManager.instance.currentCheckPoint.transform.position;
+        inactiveCharacter.transform.position = activeCharacter.transform.position + new Vector3(-2, .5f, 0);
     }
 
     void SetActiveCharacter()
@@ -108,4 +118,11 @@ public class CharacterManager : MonoBehaviour
     {
         noCollide = !noCollide;
     }
+
+    public void TeleportInactiveCharacter()
+    {
+        activeCharacter.TeleportOtherCharacterToThis();
+    }
+
+
 }

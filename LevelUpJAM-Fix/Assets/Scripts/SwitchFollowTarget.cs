@@ -16,13 +16,31 @@ public class SwitchFollowTarget : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-      if (red.isActive && vCam.m_Follow != red.transform)
+      if (red.isActive)
         {
-            vCam.m_Follow = red.transform;
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                vCam.m_Follow = red.lookUp;
+            }
+            else if (Input.GetKey(KeyCode.DownArrow))
+            {
+                vCam.m_Follow = red.lookDown;
+            }
+            else if (vCam.m_Follow != red.transform)
+                vCam.m_Follow = red.transform;
         }
-        else if (blue.isActive && vCam.m_Follow != blue.transform)
+        else if (blue.isActive)
         {
-            vCam.m_Follow = blue.transform;
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                vCam.m_Follow = blue.lookUp;
+            }
+            else if (Input.GetKey(KeyCode.DownArrow))
+            {
+                vCam.m_Follow = blue.lookDown;
+            }
+            else if (vCam.m_Follow != blue.transform)
+                vCam.m_Follow = blue.transform;
         }
     }
 }

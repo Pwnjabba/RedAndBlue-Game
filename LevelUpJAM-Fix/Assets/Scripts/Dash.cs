@@ -15,13 +15,6 @@ public class Dash : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            character.StartDash(true, dashForce);
-        }
-        else if (Input.GetKeyDown(KeyCode.Q))
-        {
-            character.StartDash(false, dashForce);
-        }
+
     }
 }

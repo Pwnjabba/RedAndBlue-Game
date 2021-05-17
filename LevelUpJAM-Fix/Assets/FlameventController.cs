@@ -10,6 +10,8 @@ public class FlameventController : MonoBehaviour
 
     public bool flaming, disabled;
 
+    public bool playOnStart;
+
     public float startDownTime, startDelayTime;
     private float downTimer, delayTimer;
 
@@ -27,15 +29,18 @@ public class FlameventController : MonoBehaviour
         main = particles.main;
         lifeTimeCache = main.startLifetime.constant;
 
+        if (playOnStart)
+        {
+            ToggleVentMode();
+            
+        }
 
 
     }
 
     // Update is called once per frame
     void Update()
-    {
-       
-
+    {     
         if (disabled)
         {
             return;
@@ -49,6 +54,7 @@ public class FlameventController : MonoBehaviour
         {
             main.startLifetime = 0;
         }
+
         delayTimer -= Time.deltaTime;
         downTimer -= Time.deltaTime;
 
@@ -70,6 +76,7 @@ public class FlameventController : MonoBehaviour
         {
             audioSource.clip = gas;
         }
+        if (audioSource.isActiveAndEnabled)
         audioSource.Play();
 
     }

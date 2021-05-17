@@ -6,16 +6,18 @@ public class RedAbilities : MonoBehaviour
 {
     public GameObject fireballPrefab;
     public Transform fireballSpawnPointL, fireballSpawnPointR;
-    PlayerController player;
+    PlayerController red;
 
-    public float speed, lifespan;
+    public GameObject particleTrail;
+    public float trailTimer, trailTime;
+    public float projectileSpeed, projectileLifespan;
 
     public float fireRate, startFireRate;
-    bool canFire;
+    public bool canFire;
     void Start()
     {
-        startFireRate = fireRate;
-        player = GetComponent<PlayerController>();
+        fireRate = startFireRate;
+        red = GetComponent<PlayerController>();
     }
 
     // Update is called once per frame
@@ -26,15 +28,30 @@ public class RedAbilities : MonoBehaviour
             return;
         }
 
+        if (red.dashing)
+        {
+            trailTimer = trailTime;
+            particleTrail.SetActive(true);
+        }
+        if (particleTrail.activeInHierarchy)
+        {
+            trailTimer -= Time.deltaTime;
+
+            if (trailTimer <= 0)
+            {
+                particleTrail.SetActive(false);
+            }
+        }
+
+
         fireRate -= Time.deltaTime;
 
-        if (fireRate <= 0 && player.mana >= player.manaBar.maximum * .25f) 
+        if (fireRate <= 0)
         {
             canFire = true;
         }
         if (Input.GetKeyDown(KeyCode.X) && canFire)
         {
-            player.mana -= Mathf.FloorToInt(player.manaBar.maximum * .25f);
             GetComponent<RedAudio>().PlayShootSound();
             fireRate = startFireRate;
             canFire = false;
@@ -47,8 +64,8 @@ public class RedAbilities : MonoBehaviour
             }
             newFireball.transform.SetParent(null);
             Fireball fireballScript = newFireball.GetComponent<Fireball>();
-            fireballScript.lifespan = lifespan;
-            fireballScript.velocity = sprite.flipX ? Vector2.left * speed : Vector2.right * speed;
+            fireballScript.lifespan = projectileLifespan;
+            fireballScript.velocity = transform.localScale.x < 0 ? Vector2.left * projectileSpeed : Vector2.right * projectileSpeed;
 
         }
     }

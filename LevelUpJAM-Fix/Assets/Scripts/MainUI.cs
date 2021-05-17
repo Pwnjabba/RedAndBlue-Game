@@ -18,7 +18,7 @@ public class MainUI : MonoBehaviour
         instance = this;
     }
     CharacterManager characterManager;
-    public TextMeshProUGUI followMode, followerRangeStatus, characterOverlapWarningText;
+    public TextMeshProUGUI followMode, followerRangeStatus, teleportInidatorText;
     public Image redSprite, blueSprite;
 
     public string text1, text2, text3;
@@ -34,20 +34,25 @@ public class MainUI : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CharacterOverlapWarning();
+        TeleportIndicator();
         SetActiveCharacterIcon();
     }
 
-    void CharacterOverlapWarning()
+    void TeleportIndicator()
     {
         if (characterManager.charactersOverlapping)
         {
-            characterOverlapWarningText.enabled = true;
+            teleportInidatorText.text = text1;
+        }
+        else if (characterManager.noCollide)
+        {
+            teleportInidatorText.text = text2;
         }
         else
         {
-            characterOverlapWarningText.enabled = false;
+            teleportInidatorText.text = text3;
         }
+
     }
 
     void SetActiveCharacterIcon()

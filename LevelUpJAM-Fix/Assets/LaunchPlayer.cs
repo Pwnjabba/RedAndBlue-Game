@@ -9,6 +9,8 @@ public class LaunchPlayer : MonoBehaviour
     AudioSource audioSource;
     AudioClip launchSound;
 
+    public Vector2 testRight, testUp;
+
     public float launchForce;
     void Start()
     {
@@ -18,7 +20,8 @@ public class LaunchPlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        testRight = transform.right;
+        testUp = transform.up;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
