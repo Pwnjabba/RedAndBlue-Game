@@ -20,6 +20,8 @@ public class BaseEnemy : MonoBehaviour
         health = maxHealth;
     }
 
+    
+
     public virtual void TakeDamage(int damage)
     {
         health -= damage;

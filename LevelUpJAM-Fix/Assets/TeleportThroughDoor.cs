@@ -28,8 +28,7 @@ public class TeleportThroughDoor : MonoBehaviour
             {
                 MusicManager.instance.PlaySong(bossSong);
                 MusicManager.instance.musicPlayer.volume = 1f;
-                boss.initiated = true;
-                
+                boss.initiated = true;            
                 activated = true;
                 CharacterManager.instance.red.transform.position = new Vector2(CharacterManager.instance.red.transform.position.x - 3f, CharacterManager.instance.red.transform.position.y);
             }

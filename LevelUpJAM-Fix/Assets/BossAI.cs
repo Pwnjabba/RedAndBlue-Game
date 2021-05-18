@@ -14,11 +14,16 @@ public class BossAI : BaseEnemy
 
     public bool initiated;
     public Door door;
-    public GameObject gravProjectile;
-    public AudioClip deathSound;
+    public GameObject gravProjectile, fastProjectile;
+    public AudioClip deathSound, EndSong;
+
+    public Transform rotationThing;
+
+    public Transform phase3point;
 
     public EnemyAudio enemyAudio;
-    public Transform[] pathNodes;
+    public Transform[] pathNodes1, path2, path3;
+    public Transform[] currentPath;
     public int nextNode;
     bool up;
     public bool iceEnemy;
@@ -28,6 +33,11 @@ public class BossAI : BaseEnemy
     public float fireInterval;
     float fireRate;
 
+    float p2timer;
+    public float p2time;
+
+    bool phase2mode;
+    Vector3 startPos;
     public Phase currentPhase;
 
     float moveTime;
@@ -40,8 +50,12 @@ public class BossAI : BaseEnemy
 
     public int pathNodesLength;
 
+
     public void Start()
     {
+        startPos = transform.position;
+        p2time = 5f;
+        p2timer = p2time;
         currentPhase = Phase.One;
         fireRate = fireInterval;
         moveTime = moveInterval;
@@ -89,7 +103,7 @@ public class BossAI : BaseEnemy
         {
             return;
         }
-        pathNodesLength = pathNodes.Length;
+        pathNodesLength = currentPath.Length;
         if (currentPhase == Phase.One)
         {
             PhaseOne();
@@ -108,8 +122,9 @@ public class BossAI : BaseEnemy
 
     void PhaseOne()
     {
+        currentPath = pathNodes1;
         fireRate -= Time.deltaTime;
-
+        fireInterval = 1f;
         if (fireRate <= 0)
         {
             fireRate = fireInterval;
@@ -119,21 +134,49 @@ public class BossAI : BaseEnemy
 
     void PhaseTwo()
     {
-        fireInterval = 1f;
-        if (fireRate <= 0)
+        currentPath = path2;
+        fireRate -= Time.deltaTime;
+        p2timer -= Time.deltaTime;
+
+        if (p2timer <= 0)
         {
+            phase2mode = !phase2mode;
+            p2timer = p2time;
+        }
+        if (fireRate <= 0 && phase2mode)
+        {
+            fireInterval = 1f;
+            fireRate = fireInterval;
             GravityProjectile();
+        }
+        else if (fireRate <= 0 && !phase2mode)
+        {
+            fireInterval = .25f;
+            fireRate = fireInterval;
+            FastProjectile();
         }
     }
 
     void PhaseThree()
     {
-
+        currentPath = path3;
+        fireRate -= Time.deltaTime;
+        if (fireRate <= 0)
+        {
+            fireInterval = .18f;
+            fireRate = fireInterval;
+            FastProjectile2();
+        }
     }
 
     void ChangePhase()
     {
-        if (health > maxHealth * .66f)
+        if (health <= 20)
+        {
+            currentPhase = Phase.Three;
+            return;
+        }
+        else if (health > maxHealth * .66f)
         {
             currentPhase = Phase.One;
         }
@@ -141,10 +184,7 @@ public class BossAI : BaseEnemy
         {
             currentPhase = Phase.Two;
         }
-        else if (health <= maxHealth * .33f)
-        {
-            currentPhase = Phase.Three;
-        }
+
     }
     private void FixedUpdate()
     {
@@ -152,12 +192,16 @@ public class BossAI : BaseEnemy
         {
             return;
         }
-        transform.position = Vector2.MoveTowards(transform.position, pathNodes[nextNode].position, speed * Time.deltaTime);
-        if (Vector2.Distance(transform.position, pathNodes[nextNode].position) < 0.2f)
+        if (currentPhase == Phase.Three)
+        {
+            return;
+        }
+        transform.position = Vector2.MoveTowards(transform.position, currentPath[nextNode].position, speed * Time.deltaTime);
+        if (Vector2.Distance(transform.position, currentPath[nextNode].position) < 0.2f)
         {
             if (moveTime <= 0)
             {
-                if (nextNode < pathNodes.Length - 1)
+                if (nextNode < currentPath.Length - 1)
                 {
                     nextNode++;
                 }
@@ -184,6 +228,24 @@ public class BossAI : BaseEnemy
         //rb.velocity = velocity;
     }
 
+    void FastProjectile()
+    {
+        GameObject newProectile = Instantiate(fastProjectile);
+        newProectile.transform.position = transform.position;
+        newProectile.GetComponent<FastProjectile>().LaunchProjectile(rotationThing.transform.right);
+
+
+    }
+
+    void FastProjectile2()
+    {
+        GameObject newProectile = Instantiate(fastProjectile);
+        newProectile.transform.position = transform.position;
+        newProectile.GetComponent<FastProjectile>().LaunchProjectile(rotationThing.transform.right);
+        newProectile.transform.localScale = newProectile.transform.localScale * .5f;
+        newProectile.GetComponent<FastProjectile>().speed = 3f;
+
+    }
     void GravityProjectile()
     {
         GameObject newProjectile = Instantiate(gravProjectile, transform);
@@ -195,10 +257,22 @@ public class BossAI : BaseEnemy
 
     public override void Die()
     {
+        if (!initiated)
+        {
+            return;
+        }
+        foreach (var thing in FindObjectsOfType<FastProjectile>())
+        {
+            Destroy(thing.gameObject);
+        }
+        ImmortalAudio.instance.PlayAudioClip(deathSound);
+        MusicManager.instance.musicPlayer.Stop();
+        MusicManager.instance.PlaySong(MusicManager.instance.song4);
+        door.Disable();
         if (diePermanently)
             PermadeadEnemies.instance.permaDeadEnemyIDs.Add(enemyID);
         base.Die();
-        ImmortalAudio.instance.PlayAudioClip(deathSound);
+
 
 
     }

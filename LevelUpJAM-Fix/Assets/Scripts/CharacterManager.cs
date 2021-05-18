@@ -51,11 +51,11 @@ public class CharacterManager : MonoBehaviour
             SwitchCharacters();
         }
 
-        if (Input.GetKeyDown(KeyCode.R) && !noCollide && !charactersOverlapping)
-        {
-            noCollide = !noCollide;
-            DisableCollisionBetweenAllies();
-        }
+        //if (Input.GetKeyDown(KeyCode.R) && !noCollide && !charactersOverlapping)
+        //{
+        //    noCollide = !noCollide;
+        //    DisableCollisionBetweenAllies();
+        //}
         else if (Input.GetKeyDown(KeyCode.R) && noCollide && !charactersOverlapping)
         {
             noCollide = !noCollide;

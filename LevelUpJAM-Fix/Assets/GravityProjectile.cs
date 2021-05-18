@@ -15,7 +15,7 @@ public class GravityProjectile : MonoBehaviour
     Vector2 projectileVelocity;
     void Start()
     {
-        maxBounces = 5;
+        maxBounces = 4;
         timer = lifeTime;
         rb = GetComponent<Rigidbody2D>();
 

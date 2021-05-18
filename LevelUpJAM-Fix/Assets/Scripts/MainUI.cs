@@ -20,6 +20,7 @@ public class MainUI : MonoBehaviour
     CharacterManager characterManager;
     public TextMeshProUGUI followMode, followerRangeStatus, teleportInidatorText;
     public Image redSprite, blueSprite;
+    public GameObject controls;
 
     public string text1, text2, text3;
     public Image activeCharacterPanel;
@@ -36,6 +37,23 @@ public class MainUI : MonoBehaviour
     {
         TeleportIndicator();
         SetActiveCharacterIcon();
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ToggleMenu();
+        }
+    }
+
+    void ToggleMenu()
+    {
+        if (controls.activeInHierarchy)
+        {
+            controls.SetActive(false);
+        }
+        else
+        {
+            controls.SetActive(true);
+        }
     }
 
     void TeleportIndicator()
